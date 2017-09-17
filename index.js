@@ -137,9 +137,25 @@ function drawNyan(nyan, line, idx) {
   }, line);
 }
 
+function sendProgressToTouchbar(progress, options) {
+    var http = require('http');
+    var req = http.request({
+        port: options.touchbarPort,
+        hostname: '127.0.0.1',
+        method: 'GET',
+        path: '/progress/'+Math.round(progress*100)
+    });
+    req.end();
+
+}
+
 function onProgress(progress, messages, step, isInProgress, options) {
   var progressWidth = Math.ceil(progress * width);
   var nyanText = options.nyanCatSays(progress, messages);
+
+  if (options.sendProgressToTouchbar) {
+      sendProgressToTouchbar(progress, options);
+  }
 
   if (isInProgress) {
     if (options.restoreCursorPosition) {
@@ -194,7 +210,9 @@ module.exports = function NyanProgressPlugin(options) {
           ''
         );
     },
-    nyanCatSays: function (progress) { return progress === 1 && 'Nyan!'; }
+    nyanCatSays: function (progress) { return progress === 1 && 'Nyan!'; },
+    sendProgressToTouchbar: true,
+    touchbarPort: 12345
   }, options);
 
   if (options.hookStdout) {
