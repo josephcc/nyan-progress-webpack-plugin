@@ -3,6 +3,10 @@ Meow
 
 <img src="nyanLight.png" width="400px" /> <img src="nyanDark.png" width="400px" />
 
+Touchbar
+
+[video 📽](https://twitter.com/Swizec/status/909565004642316288)
+
 ## Install
 
 ```
