@@ -39,3 +39,4 @@ new NyanProgressPlugin(options)
 | debounceInterval | Number | `180` | Defines how often `getProgressMessage` is called (in milliseconds) |
 | nyanCatSays | `function(progress, messages)` | `progress === 1 && 'Nyan!'` | Override this function to define what nyan cat is saying |
 | restoreCursorPosition | Boolean | `false` | Enable this flag, if your terminal supports saving/restoring cursor position, for better output handling |
+| sendProgressToTouchbar | Boolean | `false` | Enable Mac Touchbar integration via [touchbar app](https://github.com/Swizec/touchbar_webpack_progress)
