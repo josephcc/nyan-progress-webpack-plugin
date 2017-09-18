@@ -211,7 +211,7 @@ module.exports = function NyanProgressPlugin(options) {
         );
     },
     nyanCatSays: function (progress) { return progress === 1 && 'Nyan!'; },
-    sendProgressToTouchbar: true,
+    sendProgressToTouchbar: false,
     touchbarPort: 12345
   }, options);
 
