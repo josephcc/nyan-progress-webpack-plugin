@@ -2,6 +2,7 @@
 var AnsiEscapes = require('ansi-escapes');
 var AnsiStyles = require('ansi-styles');
 var webpack = require('webpack');
+var compiler = new webpack.Compiler();
 
 require('object.assign').shim();
 
@@ -137,16 +138,19 @@ function drawNyan(nyan, line, idx) {
   }, line);
 }
 
-function sendProgressToTouchbar(progress, options) {
-    var http = require('http');
-    var req = http.request({
-        port: options.touchbarPort,
-        hostname: '127.0.0.1',
-        method: 'GET',
-        path: '/progress/'+Math.round(progress*100)
-    });
-    req.end();
+function sendFail() {
+}
 
+function sendProgressToTouchbar(progress, options) {
+  var http = require('http');
+  var req = http.request({
+    port: options.touchbarPort,
+    hostname: '127.0.0.1',
+    method: 'GET',
+    path: '/progress/'+Math.round(progress*100)
+  })
+  req.on('error', sendFail);
+  req.end();
 }
 
 function onProgress(progress, messages, step, isInProgress, options) {
@@ -154,7 +158,7 @@ function onProgress(progress, messages, step, isInProgress, options) {
   var nyanText = options.nyanCatSays(progress, messages);
 
   if (options.sendProgressToTouchbar) {
-      sendProgressToTouchbar(progress, options);
+    sendProgressToTouchbar(progress, options);
   }
 
   if (isInProgress) {
@@ -191,7 +195,7 @@ function onProgress(progress, messages, step, isInProgress, options) {
   }
 }
 
-module.exports = function NyanProgressPlugin(options) {
+function NyanProgressPlugin(options) {
   var timer = 0;
   var shift = 0;
   var originalStdoutWrite;
@@ -225,7 +229,18 @@ module.exports = function NyanProgressPlugin(options) {
     }
   }
 
-  return new webpack.ProgressPlugin(function(progress, message) {
+  var fs = require('fs');
+  var homedir = require('os').homedir();
+
+  new webpack.ProgressPlugin(function(progress, message, ...args) {
+
+    fs.writeFile(homedir + '/.webpack_progress', (Math.round(progress*1000)/10) + '% ' + message, function(err) {
+      if(err) {
+        return console.log(err);
+      }
+    });
+
+
     var now = new Date().getTime();
     if (!isStarted) {
       onProgress(progress, [message], shift++, false, options);
@@ -249,4 +264,48 @@ module.exports = function NyanProgressPlugin(options) {
       isPrintingProgress = false;
     }
   });
+
+  var apply = function apply(compiler) {
+
+    if (compiler.hooks) {
+      console.log('COMPILER>HOOKS')
+
+      compiler.hooks.done.tap('Hello World Plugin', (stats) => {
+        console.log('DONE');
+      })
+
+      compiler.hooks.emit.tapAsync(
+        'MyExampleWebpackPlugin3',
+        (compilation, callback) => {
+          console.log('EMIT');
+          compilation.hooks.failedModule.tap('naj',
+            () => { console.log('module failed333333')})
+          callback();
+        });
+
+      compiler.hooks.failed.tap(
+        'MyExampleWebpackPlugin1',
+        (compilation) => {
+          console.log('FAILED1');
+          compilation.hooks.failedModule.tap('naj',
+            () => { console.log('module failed2')})
+        });
+
+      compiler.hooks.compilation.tap(
+        'bnlah',
+        (compilation) => {
+          compilation.hooks.failedModule.tap('naj',
+            () => { console.log('module failed1')})
+        });
+    } else {
+      console.log('NO COMPILER>HOOKS')
+      compiler.plugin('failed', () => console.log('OHFAILED'))
+    }
+
+  }
+  return { apply };
 };
+
+
+exports.default = NyanProgressPlugin;
+module.exports = exports['default'];
